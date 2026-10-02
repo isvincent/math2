@@ -43,6 +43,9 @@
                     {{ i18n.title[settings.language] }}
                 </h1>
                 <div class="flex space-x-2 sm:space-x-4">
+                    <a href="選修數學乙(下)課本_線性規劃.pdf" target="_blank" class="bg-red-500 hover:bg-red-400 p-2.5 rounded-full transition-all duration-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-white/50 text-white flex items-center justify-center" title="開啟原教材 PDF">
+                        <i class="fas fa-file-pdf text-xl hover:scale-110 transition-transform"></i>
+                    </a>
                     <button @click="showSettings = true" class="bg-white/20 hover:bg-white/30 p-2.5 rounded-full transition-all duration-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-white/50" :title="i18n.settings[settings.language]">
                         <i class="fas fa-cog text-xl transform hover:rotate-90 transition-transform duration-300"></i>
                     </button>
@@ -344,7 +347,12 @@
                 <!-- Textbook Tab -->
                 <div v-show="currentTab === 'textbook'" class="w-full animate-fade-in space-y-6">
                     <div class="card">
-                        <h2 class="text-2xl font-bold text-blue-600 mb-4 border-b pb-2"><i class="fas fa-book mr-2"></i>課本範例與習題</h2>
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 border-b pb-4 gap-4">
+                            <h2 class="text-2xl font-bold text-blue-600"><i class="fas fa-book mr-2"></i>課本範例與習題</h2>
+                            <a href="選修數學乙(下)課本_線性規劃.pdf" target="_blank" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-5 rounded-xl shadow-md transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex items-center">
+                                <i class="fas fa-file-pdf mr-2 text-xl"></i> 開啟原版教材 PDF
+                            </a>
+                        </div>
                         <p class="mb-4">以下收錄了原版教材中的重要例題、隨堂練習與課後習題。所有的數學公式皆會自動排版顯示，您可以點擊「顯示解答」來對照自己的計算結果。</p>
                         
                         <div class="space-y-6">
