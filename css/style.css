@@ -1,0 +1,136 @@
+/* Custom Styles for Linear Programming Web App */
+:root {
+  --primary-color: #4CAF50;
+  --secondary-color: #FFC107;
+  --bg-light: #f3f4f6;
+  --bg-dark: #1f2937;
+  --text-light: #1f2937;
+  --text-dark: #f3f4f6;
+}
+
+body {
+  transition: background-color 0.3s, color 0.3s;
+  font-family: 'Noto Sans TC', sans-serif;
+}
+
+.dark-mode {
+  background-color: var(--bg-dark);
+  color: var(--text-dark);
+}
+
+.dark-mode .card {
+  background-color: #374151;
+  color: var(--text-dark);
+}
+
+.card {
+  background-color: #ffffff;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  transition: transform 0.2s, background-color 0.3s;
+}
+
+.interactive-canvas-container {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  border: 2px dashed #9ca3af;
+  border-radius: 8px;
+  background-color: #fdfdfd;
+}
+.dark-mode .interactive-canvas-container {
+  background-color: #1f2937;
+  border-color: #4b5563;
+}
+
+canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* Custom Range Slider */
+input[type=range] {
+  -webkit-appearance: none;
+  width: 100%;
+  background: transparent;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+  margin-top: -8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+input[type=range]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  background: #d1d5db;
+  border-radius: 2px;
+}
+.dark-mode input[type=range]::-webkit-slider-runnable-track {
+  background: #4b5563;
+}
+
+/* Settings Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  backdrop-filter: blur(2px);
+}
+
+/* Device Simulators */
+.device-phone {
+  max-width: 375px !important;
+  margin: 0 auto;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border: 8px solid #374151;
+}
+.device-tablet {
+  max-width: 768px !important;
+  margin: 0 auto;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border: 12px solid #374151;
+}
+.device-desktop {
+  max-width: 1200px !important;
+  margin: 0 auto;
+}
+
+.layout-landscape {
+  flex-direction: row !important;
+  flex-wrap: wrap;
+}
+.layout-portrait {
+  flex-direction: column !important;
+}
+
+/* Responsive Font Sizes */
+.font-small { font-size: 1rem; }
+.font-standard { font-size: 1.125rem; }
+.font-large { font-size: 1.25rem; }

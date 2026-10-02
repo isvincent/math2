@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>線性規劃互動學習網</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+      }
+    </script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- KaTeX for Math Formulas -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+
+    <!-- Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body id="app-body" class="bg-gray-100 text-gray-800 dark:text-gray-100 transition-colors duration-300 antialiased bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9IiNlN2U1ZTQiIGZpbGwtb3BhY2l0eT0iMC40Ii8+PC9zdmc+')] dark:bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9IiM0YjU1NjMiIGZpbGwtb3BhY2l0eT0iMC4yIi8+PC9zdmc+')]">
+    <div id="app" :class="[deviceClass, fontClass, themeClass, 'min-h-screen', 'flex', 'flex-col']">
+        
+        <!-- Header (Glassmorphism) -->
+        <header class="bg-blue-600/90 backdrop-blur-md text-white p-4 shadow-lg sticky top-0 z-50 border-b border-blue-500/50">
+            <div class="container mx-auto flex justify-between items-center">
+                <h1 class="text-2xl font-bold flex items-center tracking-wide">
+                    <i class="fas fa-chart-line mr-3 text-blue-200"></i> 
+                    {{ i18n.title[settings.language] }}
+                </h1>
+                <div class="flex space-x-2 sm:space-x-4">
+                    <button @click="showSettings = true" class="bg-white/20 hover:bg-white/30 p-2.5 rounded-full transition-all duration-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-white/50" :title="i18n.settings[settings.language]">
+                        <i class="fas fa-cog text-xl transform hover:rotate-90 transition-transform duration-300"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Navigation (Glassmorphism) -->
+        <nav class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-md z-40 sticky top-[68px] border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
+            <div class="container mx-auto flex justify-start sm:justify-around p-2.5 min-w-max space-x-2">
+                <button v-for="tab in tabs" :key="tab.id" 
+                        @click="changeTab(tab.id)"
+                        :class="['px-5 py-2.5 rounded-xl font-bold transition-all duration-300 flex flex-col items-center sm:flex-row sm:space-x-3 whitespace-nowrap shadow-sm border', 
+                                 currentTab === tab.id ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-transparent scale-105 shadow-blue-500/30' : 'bg-white dark:bg-gray-700 text-gray-600 hover:bg-gray-50 border-gray-200 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600 hover:-translate-y-0.5']">
+                    <i :class="tab.icon + ' text-xl sm:text-lg mb-1 sm:mb-0'"></i>
+                    <span class="text-xs sm:text-base">{{ tab.name[settings.language] }}</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="flex-grow p-4 container mx-auto">
+            <div :class="['flex', 'gap-4', layoutClass, 'w-full']">
+                
+                <!-- Learn Tab -->
+                <div v-show="currentTab === 'learn'" class="w-full animate-fade-in space-y-6">
+                    
+                    <div class="card text-center bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-700">
+                        <h2 class="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">{{ i18n.learn_title[settings.language] }}</h2>
+                        <p class="text-lg text-gray-600 dark:text-gray-300">{{ i18n.learn_intro[settings.language] }}</p>
+                    </div>
+
+                    <!-- 🗺️ 學習指引 -->
+                    <div class="card bg-white dark:bg-gray-800 border-l-4 border-yellow-500 shadow-md">
+                        <h2 class="text-xl font-bold text-yellow-600 dark:text-yellow-400 mb-4 border-b border-gray-200 dark:border-gray-700 pb-2"><i class="fas fa-map-signs mr-2"></i>給學生的學習指引：如何稱霸本單元？</h2>
+                        <p class="mb-4 text-gray-700 dark:text-gray-300">學習線性規劃需要循序漸進，建議你依照以下四個步驟來使用本網站：</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg relative overflow-hidden group hover:shadow-md transition">
+                                <div class="absolute -right-4 -top-4 text-gray-200 dark:text-gray-600 text-6xl opacity-30 group-hover:scale-110 transition"><i class="fas fa-pencil-ruler"></i></div>
+                                <h3 class="font-bold text-blue-600 dark:text-blue-400 mb-2">Step 1. 建立圖形直覺</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-300">先閱讀單元 1~2，學會把「大於、小於」的不等式轉換為平面上的區域，並透過互動畫布觀察平行線的平移。</p>
+                            </div>
+                            <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg relative overflow-hidden group hover:shadow-md transition">
+                                <div class="absolute -right-4 -top-4 text-gray-200 dark:text-gray-600 text-6xl opacity-30 group-hover:scale-110 transition"><i class="fas fa-key"></i></div>
+                                <h3 class="font-bold text-green-600 dark:text-green-400 mb-2">Step 2. 掌握核心解法</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-300">進入單元 3~5，重點學習如何畫出「可行解區域」，並熟練運用「平行線法」與「頂點法」尋找極值。</p>
+                            </div>
+                            <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg relative overflow-hidden group hover:shadow-md transition">
+                                <div class="absolute -right-4 -top-4 text-gray-200 dark:text-gray-600 text-6xl opacity-30 group-hover:scale-110 transition"><i class="fas fa-bomb"></i></div>
+                                <h3 class="font-bold text-red-600 dark:text-red-400 mb-2">Step 3. 避開考題陷阱</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-300">大考最愛考變化題！詳讀單元 4 了解「無界區域」，並在單元 7、8 理解「多重解」與「整數解」的進階觀念。</p>
+                            </div>
+                            <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg relative overflow-hidden group hover:shadow-md transition">
+                                <div class="absolute -right-4 -top-4 text-gray-200 dark:text-gray-600 text-6xl opacity-30 group-hover:scale-110 transition"><i class="fas fa-dumbbell"></i></div>
+                                <h3 class="font-bold text-purple-600 dark:text-purple-400 mb-2">Step 4. 實戰演練與測驗</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-300">觀念通了以後，請前往上方的「課本題庫」看詳解，接著在「練習區」動手算，最後到「測驗區」檢驗學習成果！</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 1. 平行直線系 -->
+                    <div class="card">
+                        <h2 class="text-xl font-bold text-blue-600 mb-4 border-b pb-2"><i class="fas fa-grip-lines mr-2"></i>1. 📏 平行直線系 (Systems of Parallel Lines)</h2>
+                        <p class="mb-4">想像一下，我們有一條直線 <code>x - y = k</code>。如果我們把它上下左右推動，它的傾斜程度（斜率）完全不會變！這群斜率相同、互相平行的親戚們，就稱為「平行直線系」！🚀</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                            <div class="interactive-canvas-container p-2 flex justify-center bg-white dark:bg-gray-800">
+                                <canvas id="lineCanvas" width="300" height="300"></canvas>
+                            </div>
+                            <div>
+                                <h4 class="font-bold mb-2">🎮 體驗平行平移</h4>
+                                <p class="mb-4">觀察直線 <span class="font-bold text-purple-600">x - y = k</span></p>
+                                <label class="block font-bold mb-2">調整 k 值: <span class="text-purple-600 font-mono">{{ lineKValue.toFixed(1) }}</span></label>
+                                <input type="range" min="-5" max="5" step="0.1" v-model.number="lineKValue" @input="drawLineCanvas">
+                                <p class="text-sm text-gray-500 mt-3">改變 k 值會改變直線的 x、y 截距，讓直線產生平移效果，但傾斜程度 (斜率) 永遠保持不變。🪄</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. 二元一次不等式 -->
+                    <div class="card">
+                        <h2 class="text-xl font-bold text-blue-600 mb-4 border-b pb-2"><i class="fas fa-chart-area mr-2"></i>2. 🎨 二元一次不等式的圖形</h2>
+                        <p class="mb-2">一條直線 <code>ax + by = c</code> 就像是一把剪刀 ✂️，會把整個平面切成兩半（兩個半平面）！</p>
+                        <ul class="list-disc pl-5 space-y-2 mb-4 text-gray-700 dark:text-gray-300">
+                            <li><strong>包含邊界：</strong>若有等號（如 <code>&le;</code>, <code>&ge;</code>），圖形包含這條線本身，畫成<strong>實線</strong> 🧱。</li>
+                            <li><strong>不含邊界：</strong>若無等號（如 <code>&lt;</code>, <code>&gt;</code>），圖形不包含邊界，畫成<strong>虛線</strong> 👻。</li>
+                            <li><strong>判斷區域：</strong>隨便找一個點（例如原點 <code>(0,0)</code>）代入算算看，如果成立，區域就在那邊！🎯</li>
+                        </ul>
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <div class="flex-1 bg-green-50 dark:bg-green-900/30 p-4 rounded-lg border border-green-200 text-center hover:scale-105 transition-transform">
+                                <p class="font-mono font-bold text-lg mb-2 text-green-700 dark:text-green-400">x + y &le; 2 🟢</p>
+                                <p class="text-sm">包含邊界 (實線)<br>代入 (0,0) => 0 &le; 2 (成立)<br>故區域包含原點。</p>
+                            </div>
+                            <div class="flex-1 bg-red-50 dark:bg-red-900/30 p-4 rounded-lg border border-red-200 text-center hover:scale-105 transition-transform">
+                                <p class="font-mono font-bold text-lg mb-2 text-red-700 dark:text-red-400">x + y &gt; 2 🔴</p>
+                                <p class="text-sm">不含邊界 (虛線)<br>代入 (0,0) => 0 &gt; 2 (不成立)<br>故區域在不含原點的另一側。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. 線性規劃與可行解區域 (互動) -->
+                    <div class="card">
+                        <h2 class="text-xl font-bold text-blue-600 mb-4 border-b pb-2"><i class="fas fa-magic mr-2"></i>3. 🎯 尋找最佳解 (目標函數極值)</h2>
+                        <p class="mb-4">當我們把很多個不等式畫在一起，它們共同重疊的區域就叫做<strong>「可行解區域」</strong>🏰。在這個區域內，我們要找出能讓目標函數（例如利潤 <code>P = x + 3y</code>）達到最大或最小的點！</p>
+                        
+                        <div class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg mb-4 text-sm border border-yellow-200">
+                            <strong>🏆 解題兩大心法：</strong><br>
+                            👉 <strong>📏 平行線法：</strong>把目標函數想成一根掃把（可以滑動的直線），在圖上掃描，最後離開區域的那個點，就是極值發生的地方！👀<br>
+                            👉 <strong>👑 頂點法：</strong>如果極值存在，必定發生在多邊形的<strong>「頂點」</strong>上。只要算出所有交點，一個一個代入比大小就可以了。🔢
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Canvas Container -->
+                            <div class="interactive-canvas-container p-2 flex justify-center items-center">
+                                <canvas id="mathCanvas" width="400" height="400"></canvas>
+                            </div>
+                            
+                            <!-- Controls -->
+                            <div class="flex flex-col justify-center space-y-6">
+                                <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                    <h4 class="font-bold mb-2">限制條件</h4>
+                                    <p class="font-mono text-base">x + 2y &le; 6</p>
+                                    <p class="font-mono text-base">2x + y &le; 6</p>
+                                    <p class="font-mono text-base">x &ge; 0, y &ge; 0</p>
+                                    
+                                    <h4 class="font-bold mt-4 mb-2">目標函數</h4>
+                                    <p class="font-mono text-lg text-red-500 font-bold">k = x + 3y</p>
+                                </div>
+                                
+                                <div class="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 shadow-sm">
+                                    <label class="block font-bold mb-2">拖曳滑桿尋找 k 的極值: <span class="text-red-500 font-bold text-xl">{{ kValue.toFixed(1) }}</span></label>
+                                    <input type="range" min="0" max="12" step="0.1" v-model.number="kValue" @input="drawCanvas">
+                                    <div class="flex justify-between text-xs mt-1 text-gray-500">
+                                        <span>k = 0</span>
+                                        <span>k = 12</span>
+                                    </div>
+                                    <p class="mt-4 text-sm text-blue-600 dark:text-blue-400">
+                                        <i class="fas fa-lightbulb mr-1"></i> 試著找找看，紅色直線離開藍色區域時，最後碰到的頂點座標是多少？
+                                    </p>
+                                    <button @click="autoPlay" class="mt-4 w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded shadow transition-transform active:scale-95">
+                                        <i class="fas fa-play mr-2"></i> 自動播放平行線動畫
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. 高二必考：沒有最佳解的情況 -->
+                    <div class="card">
+                        <h2 class="text-xl font-bold text-red-600 mb-4 border-b pb-2"><i class="fas fa-exclamation-circle mr-2"></i>4. 高二段考必考陷阱：什麼時候會「沒有」最佳解？</h2>
+                        <p class="mb-4 text-lg text-gray-700 dark:text-gray-300">在高中數學的大考中，不是每一個線性規劃問題都能順利找到最大值和最小值！請特別留意以下兩種常考的陷阱情況：</p>
+                        
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <div class="flex-1 bg-red-50 dark:bg-red-900/30 p-5 rounded-lg border border-red-200 dark:border-red-800 shadow-sm">
+                                <h4 class="font-bold text-red-700 dark:text-red-400 mb-2 text-lg">陷阱一：無界的區域 (Unbounded Region)</h4>
+                                <p class="text-gray-800 dark:text-gray-200 mb-3">如果可行解區域沒有被完全封閉（例如一直往右上方無窮延伸），此時目標函數可能會有最小值，但<strong>最大值會是無限大（不存在）</strong>。</p>
+                                <p class="text-sm text-red-600 dark:text-red-300 font-bold bg-white dark:bg-gray-800 p-2 rounded">
+                                    💡 破解法：遇到無界區域時，千萬別只依賴頂點法！請用「平行線法」推演一次，最能清楚看出直線是否會一直無窮盡地平移下去。
+                                </p>
+                            </div>
+                            <div class="flex-1 bg-gray-100 dark:bg-gray-700 p-5 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm">
+                                <h4 class="font-bold text-gray-700 dark:text-gray-300 mb-2 text-lg">陷阱二：空集合 (No Feasible Region)</h4>
+                                <p class="text-gray-800 dark:text-gray-200 mb-3">如果限制條件彼此互相矛盾（例如：要求 <code>x+y &ge; 5</code> 同時又要求 <code>x+y &le; 2</code>），那麼根本畫不出共同的交集區域。</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 font-bold bg-white dark:bg-gray-800 p-2 rounded">
+                                    💡 破解法：沒有可行解區域，當然就沒有最佳解！解題第一步一定要畫圖確保「交集區域存在」。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. 統整：平行線法 vs 頂點法 -->
+                    <div class="card">
+                        <h2 class="text-xl font-bold text-blue-600 mb-4 border-b pb-2"><i class="fas fa-balance-scale mr-2"></i>5. 考前統整：我該用平行線法還是頂點法？</h2>
+                        <p class="mb-4 text-gray-700 dark:text-gray-300">這是高二學生最常問的問題。其實兩種方法各有千秋，大考時最好<strong>兩者搭配使用</strong>：</p>
+                        <div class="overflow-x-auto rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                            <table class="min-w-full bg-white dark:bg-gray-800 text-left">
+                                <thead class="bg-blue-50 dark:bg-gray-700 border-b dark:border-gray-600">
+                                    <tr>
+                                        <th class="py-3 px-4 font-bold text-gray-700 dark:text-gray-200">解題方法</th>
+                                        <th class="py-3 px-4 font-bold text-gray-700 dark:text-gray-200">優點 (什麼時候用)</th>
+                                        <th class="py-3 px-4 font-bold text-gray-700 dark:text-gray-200">缺點與盲點 (要注意什麼)</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                        <td class="py-3 px-4 font-bold text-green-600 dark:text-green-400">📍 頂點法</td>
+                                        <td class="py-3 px-4 text-gray-700 dark:text-gray-300">計算簡單暴力，只要把所有交點解出來，代入比大小即可。非常適合「封閉的多邊形區域」。</td>
+                                        <td class="py-3 px-4 text-gray-700 dark:text-gray-300">當區域是「無界」時，頂點法可能會給出錯誤答案！此外，單純代入數字無法判斷「多重最佳解」。</td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                        <td class="py-3 px-4 font-bold text-blue-600 dark:text-blue-400">📏 平行線法</td>
+                                        <td class="py-3 px-4 text-gray-700 dark:text-gray-300">幾何意義最清晰！能完美解決無界區域、找出無限多組解，這是大考真正想測驗的數學觀念。</td>
+                                        <td class="py-3 px-4 text-gray-700 dark:text-gray-300">需要畫圖比較精準，如果只靠肉眼判斷斜率大小容易看錯（建議配合斜率數值分析）。</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 6. 實際應用範例 -->
+                    <div class="card">
+                        <h2 class="text-xl font-bold text-blue-600 mb-4 border-b pb-2"><i class="fas fa-industry mr-2"></i>6. 🏭 現實生活中的線性規劃應用</h2>
+                        <p class="mb-4">線性規劃最早於 1920~1930 年代發展，如今廣泛應用於物流路線設計 🚚、商品庫存管理 📦、資源最佳化分配等領域。讓我們看一個工廠生產的經典例子：</p>
+                        
+                        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-5 border-l-4 border-orange-500">
+                            <h3 class="font-bold text-lg mb-2">🏭 鍛冶工廠的利潤最大化問題</h3>
+                            <p class="mb-2"><strong>情境：</strong>工廠使用紅色、黃色礦砂來生產 A、B 兩種合金。</p>
+                            <ul class="list-disc pl-5 space-y-1 mb-4 text-sm">
+                                <li>生產 1 公斤 A 合金：需紅色礦砂 50g、黃色 40g。每公斤利潤 50 元。</li>
+                                <li>生產 1 公斤 B 合金：需紅色礦砂 20g、黃色 40g。每公斤利潤 30 元。</li>
+                                <li><strong>資源限制：</strong>目前庫存只有紅色 900g，黃色 1200g。</li>
+                            </ul>
+                            
+                            <p class="font-bold mb-1">【數學模型建立】</p>
+                            <p class="text-sm mb-2">設生產 A 合金 <code>x</code> 公斤，B 合金 <code>y</code> 公斤。</p>
+                            <div class="font-mono text-sm bg-white dark:bg-gray-800 p-3 rounded mb-2 inline-block shadow-sm">
+                                <p>目標函數 (總利潤)： P = 50x + 30y</p>
+                                <p>限制條件 (紅砂)： 50x + 20y &le; 900</p>
+                                <p>限制條件 (黃砂)： 40x + 40y &le; 1200</p>
+                                <p>隱含條件： x &ge; 0, y &ge; 0</p>
+                            </div>
+                            <p class="text-sm text-blue-600 dark:text-blue-400">解法提示：透過畫出不等式圖形找到各個頂點，代入 <code>50x+30y</code> 比較，即可推算出最佳的生產配比！</p>
+                        </div>
+                    </div>
+
+                    <!-- 7. 特殊情況：多重最佳解 -->
+                    <div class="card">
+                        <h2 class="text-xl font-bold text-blue-600 mb-4 border-b pb-2"><i class="fas fa-clone mr-2"></i>7. 進階探討：多重最佳解 (無限多組解)</h2>
+                        <p class="mb-4">在某些情況下，最佳解可能不只一個頂點！當<strong>目標函數的直線斜率</strong>剛好與<strong>可行解區域的某條邊界斜率</strong>相同時，平移的直線會與該邊界完全重疊。</p>
+                        
+                        <div class="flex flex-col md:flex-row gap-4 items-center">
+                            <div class="flex-1">
+                                <ul class="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
+                                    <li>如果最大值出現在頂點 A 與頂點 B 兩處，這代表什麼？</li>
+                                    <li>這代表連接 A、B 兩點的<strong>整條線段上</strong>的每一個點，代入目標函數都會得到相同的最大值！</li>
+                                    <li>這種情況我們稱為具有「多重最佳解」或「無限多組最佳解」。</li>
+                                </ul>
+                            </div>
+                            <div class="flex-1 bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg text-center border border-blue-200">
+                                <i class="fas fa-equals text-4xl text-blue-400 mb-2"></i>
+                                <p class="font-bold">判斷技巧</p>
+                                <p class="text-sm mt-2">若將兩個相鄰的頂點代入目標函數得到相同極值，即為多重解發生！</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 8. 離散問題：整數解 -->
+                    <div class="card">
+                        <h2 class="text-xl font-bold text-blue-600 mb-4 border-b pb-2"><i class="fas fa-th mr-2"></i>8. 現實的限制：整數解 (格子點)</h2>
+                        <p class="mb-4">在實際應用中，許多變數不能是小數。例如：生產的汽車數量、安排的員工對數、購買的商品件數等，這些都必須是<strong>整數</strong>。</p>
+                        
+                        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                            <h3 class="font-bold text-lg mb-2">尋找格子點</h3>
+                            <p class="text-sm mb-3">若題目限制 <code>x, y</code> 必須為整數，我們要在可行解區域內找出座標皆為整數的點（稱為格子點）。</p>
+                            <div class="bg-white dark:bg-gray-800 border-l-4 border-purple-500 p-3 text-sm font-mono shadow-sm">
+                                例題：求滿足 3x + 2y &le; 6, x &ge; 0, y &ge; 0 的非負整數解有幾組？<br><br>
+                                檢驗 x = 0 時: 2y &le; 6 => y 可為 0, 1, 2, 3 (共 4 組)<br>
+                                檢驗 x = 1 時: 3 + 2y &le; 6 => 2y &le; 3 => y 可為 0, 1 (共 2 組)<br>
+                                檢驗 x = 2 時: 6 + 2y &le; 6 => 2y &le; 0 => y 可為 0 (共 1 組)<br>
+                                結論：共有 4 + 2 + 1 = 7 組整數解！
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 9. 生活應用 -->
+                    <div class="card bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 border-t-4 border-t-green-500">
+                        <h2 class="text-2xl font-bold text-green-700 dark:text-green-400 mb-4 border-b border-green-200 dark:border-green-800 pb-2"><i class="fas fa-globe-asia mr-2"></i>9. 學以致用：學完線性規劃，在生活中有什麼用？</h2>
+                        <p class="mb-4 text-gray-800 dark:text-gray-200 text-lg">線性規劃不只是考卷上的數學題，它是現代社會運作的幕後推手。身為高中生，你也可以將這套思維應用在生活中：</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                            <!-- Application 1 -->
+                            <div class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-lg transition-shadow">
+                                <div class="text-4xl text-blue-500 mb-3"><i class="fas fa-wallet"></i></div>
+                                <h3 class="font-bold text-lg mb-2 text-gray-800 dark:text-gray-100">零用錢與時間管理</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                                    你有固定的零用錢和週末時間（限制條件），想要兼顧「娛樂滿足感」和「讀書進度」（目標函數）。你可以透過設立不等式，找出最佳的時間與金錢分配！
+                                </p>
+                            </div>
+                            <!-- Application 2 -->
+                            <div class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-lg transition-shadow">
+                                <div class="text-4xl text-red-500 mb-3"><i class="fas fa-hamburger"></i></div>
+                                <h3 class="font-bold text-lg mb-2 text-gray-800 dark:text-gray-100">飲食與健康控制</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                                    想減脂增肌，必須達到每日蛋白質需求，但又不能超過卡路里上限（限制條件）。在預算有限下，該買多少雞胸肉、多少豆漿，才能達到最省錢的健康組合？這就是標準的最小化成本問題！
+                                </p>
+                            </div>
+                            <!-- Application 3 -->
+                            <div class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-lg transition-shadow">
+                                <div class="text-4xl text-purple-500 mb-3"><i class="fas fa-gamepad"></i></div>
+                                <h3 class="font-bold text-lg mb-2 text-gray-800 dark:text-gray-100">遊戲資源調度</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                                    在策略遊戲中，你有固定的金幣與木材，要決定生產多少步兵和騎兵來達到最強戰鬥力。每一個單位的消耗與戰力貢獻都不同，這本質上就是一個整數線性規劃問題！
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Textbook Tab -->
+                <div v-show="currentTab === 'textbook'" class="w-full animate-fade-in space-y-6">
+                    <div class="card">
+                        <h2 class="text-2xl font-bold text-blue-600 mb-4 border-b pb-2"><i class="fas fa-book mr-2"></i>課本範例與習題</h2>
+                        <p class="mb-4">以下收錄了原版教材中的重要例題、隨堂練習與課後習題。所有的數學公式皆會自動排版顯示，您可以點擊「顯示解答」來對照自己的計算結果。</p>
+                        
+                        <div class="space-y-6">
+                            <div v-for="(prob, index) in textbookProblems" :key="index" class="bg-gray-50 dark:bg-gray-700 p-5 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm transition hover:shadow-md">
+                                <div class="flex justify-between items-center mb-3">
+                                    <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded dark:bg-blue-900 dark:text-blue-300">
+                                        {{ prob.type }}
+                                    </span>
+                                    <span class="font-bold text-gray-700 dark:text-gray-300">{{ prob.title }}</span>
+                                </div>
+                                <div class="text-lg text-gray-800 dark:text-gray-200 mb-4 leading-relaxed" v-html="renderMath(prob.content)"></div>
+                                
+                                <button @click="prob.showAnswer = !prob.showAnswer; playSound('click')" class="text-blue-600 dark:text-blue-400 font-bold hover:underline mb-2 flex items-center focus:outline-none">
+                                    <i :class="prob.showAnswer ? 'fas fa-eye-slash mr-2' : 'fas fa-eye mr-2'"></i>
+                                    {{ prob.showAnswer ? '隱藏解答' : '顯示解答' }}
+                                </button>
+                                
+                                <div v-if="prob.showAnswer" class="bg-yellow-50 dark:bg-yellow-900/30 p-4 rounded border-l-4 border-yellow-400 mt-2 text-gray-800 dark:text-gray-200 animate-fade-in">
+                                    <h4 class="font-bold mb-1 text-yellow-700 dark:text-yellow-500">解答：</h4>
+                                    <div v-html="renderMath(prob.solution)" class="leading-relaxed"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Practice Tab -->
+                <div v-show="currentTab === 'practice'" class="w-full animate-fade-in space-y-6">
+                    <div class="card">
+                        <h2 class="text-2xl font-bold text-blue-600 mb-4 border-b pb-2"><i class="fas fa-dumbbell mr-2"></i>{{ i18n.practice_title[settings.language] }}</h2>
+                        <p class="mb-4">{{ i18n.practice_intro[settings.language] }}</p>
+                        
+                        <div v-if="currentPractice" class="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg shadow-inner">
+                            <h3 class="text-xl font-bold mb-4">練習題：求極值</h3>
+                            <div class="mb-4">
+                                <p class="mb-2 text-gray-700 dark:text-gray-300">請在下列限制條件下：</p>
+                                <div class="ml-4 font-mono text-lg space-y-1 bg-white dark:bg-gray-800 p-3 rounded border inline-block shadow-sm">
+                                    <p v-for="(cond, i) in currentPractice.conditions" :key="i">{{ cond }}</p>
+                                </div>
+                            </div>
+                            <div class="mb-6">
+                                <p class="text-lg">試求目標函數 <span class="font-mono font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900 px-2 py-1 rounded">{{ currentPractice.objective }}</span> 的 <strong class="text-red-500 text-xl">{{ currentPractice.type === 'max' ? '最大值' : '最小值' }}</strong>：</p>
+                            </div>
+                            
+                            <div class="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-3">
+                                <input type="number" v-model.number="practiceAnswer" placeholder="請輸入計算結果..." class="border-2 border-gray-300 rounded px-4 py-2 text-lg focus:outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white flex-grow max-w-xs shadow-sm transition">
+                                <button @click="checkPracticeAnswer" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow-md transition transform active:scale-95">
+                                    <i class="fas fa-paper-plane mr-2"></i>送出答案
+                                </button>
+                                <button @click="generatePractice" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded shadow transition">
+                                    <i class="fas fa-sync-alt mr-2"></i>換一題
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quiz Tab -->
+                <div v-show="currentTab === 'quiz'" class="w-full animate-fade-in space-y-6">
+                    <div class="card">
+                        <h2 class="text-2xl font-bold text-blue-600 mb-4 border-b pb-2"><i class="fas fa-tasks mr-2"></i>{{ i18n.quiz_title[settings.language] }}</h2>
+                        
+                        <div v-if="!quizStarted && !quizFinished" class="text-center py-10">
+                            <i class="fas fa-brain text-6xl text-purple-400 mb-4"></i>
+                            <p class="text-lg mb-6">準備好驗證你的線性規劃知識了嗎？測驗包含基礎觀念與幾何意義的判斷，共 10 題觀念題。</p>
+                            <button @click="startQuiz" class="bg-purple-600 hover:bg-purple-700 text-white text-xl font-bold py-3 px-8 rounded-full shadow-lg transform transition hover:scale-105 active:scale-95">
+                                🚀 開始測驗
+                            </button>
+                        </div>
+                        
+                        <div v-if="quizStarted && !quizFinished" class="space-y-6">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-bold text-gray-500">題目 {{ quizCurrentIndex + 1 }} / {{ quizQuestions.length }}</span>
+                                <span class="bg-purple-100 text-purple-800 text-sm font-bold px-3 py-1 rounded-full border border-purple-200">得分: {{ quizScore }}</span>
+                            </div>
+                            
+                            <!-- Progress bar -->
+                            <div class="h-3 w-full bg-gray-200 rounded-full overflow-hidden shadow-inner">
+                                <div class="h-full bg-gradient-to-r from-purple-400 to-purple-600 rounded-full transition-all duration-500" :style="{ width: ((quizCurrentIndex) / quizQuestions.length * 100) + '%' }"></div>
+                            </div>
+                            
+                            <h3 class="text-xl font-bold mt-6 mb-4 text-gray-800 dark:text-white leading-relaxed">{{ quizQuestions[quizCurrentIndex].q }}</h3>
+                            
+                            <div class="space-y-3 mt-6">
+                                <button v-for="(opt, idx) in quizQuestions[quizCurrentIndex].options" :key="idx"
+                                        @click="selectQuizOption(idx)"
+                                        class="w-full text-left p-4 rounded-lg border-2 border-gray-200 hover:border-purple-500 hover:bg-purple-50 dark:border-gray-600 dark:hover:border-purple-400 dark:hover:bg-purple-900/30 transition shadow-sm font-medium">
+                                    {{ opt }}
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div v-if="quizFinished" class="text-center py-10 animate-fade-in">
+                            <i class="fas fa-trophy text-6xl text-yellow-500 mb-4 drop-shadow-md"></i>
+                            <h3 class="text-3xl font-bold mb-2">測驗完成！</h3>
+                            <p class="text-xl mb-6">你的總得分： <span class="text-red-500 font-bold text-4xl">{{ quizScore }}</span> / 100</p>
+                            
+                            <div v-if="quizScore === 100" class="text-green-500 font-bold text-lg mb-6">🎉 完美！你已經完全掌握了線性規劃的核心概念！</div>
+                            <div v-else-if="quizScore >= 60" class="text-blue-500 font-bold text-lg mb-6">👍 不錯喔！基本的觀念都有掌握，可以多去練習區挑戰看看。</div>
+                            <div v-else class="text-orange-500 font-bold text-lg mb-6">💪 再接再厲！建議可以回到「學習區」重新複習重點概念喔。</div>
+
+                            <div class="flex justify-center space-x-4">
+                                <button @click="startQuiz" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded shadow transition">
+                                    <i class="fas fa-redo mr-2"></i>重新測驗
+                                </button>
+                                <button @click="changeTab('history')" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded shadow transition">
+                                    <i class="fas fa-history mr-2"></i>查看歷程
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History Tab -->
+                <div v-show="currentTab === 'history'" class="w-full animate-fade-in space-y-6">
+                    <div class="card">
+                        <div class="flex flex-col sm:flex-row justify-between items-center mb-4 border-b pb-4 gap-4">
+                            <h2 class="text-2xl font-bold text-blue-600"><i class="fas fa-history mr-2"></i>{{ i18n.history_title[settings.language] }}</h2>
+                            <button @click="downloadHistory" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded flex items-center justify-center shadow-md transition transform active:scale-95">
+                                <i class="fas fa-file-csv text-xl mr-2"></i> 下載歷程報表 (CSV)
+                            </button>
+                        </div>
+                        
+                        <div v-if="history.length === 0" class="text-center py-12 text-gray-500 bg-gray-50 dark:bg-gray-800 rounded-lg border border-dashed border-gray-300">
+                            <i class="fas fa-folder-open text-4xl mb-3 text-gray-300"></i>
+                            <p class="text-lg">尚無學習紀錄，趕快去練習區或測驗區挑戰吧！</p>
+                        </div>
+                        
+                        <div v-else class="overflow-x-auto rounded-lg shadow border border-gray-200 dark:border-gray-700">
+                            <table class="min-w-full bg-white dark:bg-gray-800">
+                                <thead class="bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                                    <tr>
+                                        <th class="py-3 px-4 text-left font-bold text-gray-700 dark:text-gray-200">完成時間</th>
+                                        <th class="py-3 px-4 text-left font-bold text-gray-700 dark:text-gray-200">活動類型</th>
+                                        <th class="py-3 px-4 text-left font-bold text-gray-700 dark:text-gray-200">活動內容</th>
+                                        <th class="py-3 px-4 text-center font-bold text-gray-700 dark:text-gray-200">結果</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                                    <tr v-for="(record, idx) in [...history].reverse()" :key="idx" class="hover:bg-blue-50 dark:hover:bg-gray-700 transition">
+                                        <td class="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">{{ record.time }}</td>
+                                        <td class="py-3 px-4">
+                                            <span :class="['px-2 py-1 rounded text-xs font-bold inline-flex items-center', 
+                                                record.type === '練習' ? 'bg-blue-100 text-blue-800 border border-blue-200' : 'bg-purple-100 text-purple-800 border border-purple-200']">
+                                                <i :class="record.type === '練習' ? 'fas fa-pencil-alt mr-1' : 'fas fa-clipboard-check mr-1'"></i>
+                                                {{ record.type }}
+                                            </span>
+                                        </td>
+                                        <td class="py-3 px-4 text-gray-800 dark:text-gray-200">{{ record.detail }}</td>
+                                        <td class="py-3 px-4 text-center font-bold" :class="record.correct ? 'text-green-500' : (record.type === '練習' ? 'text-red-500' : 'text-gray-500')">
+                                            <i v-if="record.correct" class="fas fa-check-circle mr-1"></i>
+                                            <i v-else-if="record.type === '練習'" class="fas fa-times-circle mr-1"></i>
+                                            {{ record.result }}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advanced Tab -->
+                <div v-show="currentTab === 'advanced'" class="w-full animate-fade-in space-y-8 pb-10">
+                    
+                    <!-- Hero Section for Advanced -->
+                    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-900 to-purple-900 text-white shadow-2xl p-8 md:p-12 border border-purple-500/30">
+                        <div class="relative z-10">
+                            <span class="bg-purple-500/30 text-purple-200 text-sm font-bold px-4 py-1.5 rounded-full backdrop-blur-sm border border-purple-400/30 mb-4 inline-block shadow-sm">
+                                <i class="fas fa-rocket mr-2"></i>超越課本的知識
+                            </span>
+                            <h2 class="text-3xl md:text-5xl font-extrabold mb-4 leading-tight drop-shadow-lg">
+                                進階與延伸學習
+                            </h2>
+                            <p class="text-lg md:text-xl text-purple-100 max-w-3xl leading-relaxed drop-shadow">
+                                當變數從兩個變成幾百個？當電腦要如何在一秒內解出最優解？讓我們一窺真實世界中，線性規劃的終極樣貌！
+                            </p>
+                        </div>
+                        <!-- Decorative background shapes -->
+                        <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-purple-500/20 blur-3xl"></div>
+                        <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-blue-500/20 blur-3xl"></div>
+                    </div>
+
+                    <!-- 1. 延伸學習：三維與多維的線性規劃 -->
+                    <div class="card hover:-translate-y-1 hover:shadow-xl transition-all duration-300 border-t-4 border-t-blue-500">
+                        <div class="flex items-center mb-6">
+                            <div class="bg-blue-100 text-blue-600 p-3 rounded-xl mr-4 shadow-inner">
+                                <i class="fas fa-cube text-2xl"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-800 dark:text-gray-100">三維與多維的線性規劃</h3>
+                        </div>
+                        <p class="mb-4 text-lg leading-relaxed text-gray-600 dark:text-gray-300">
+                            在課本中，我們只處理了 $x, y$ 兩個變數，因此可行解區域是一個平面的「多邊形」。<br>
+                            如果我們有 $x, y, z$ 三個變數呢？
+                        </p>
+                        <ul class="space-y-3 mb-6 bg-gray-50 dark:bg-gray-700/50 p-6 rounded-xl text-gray-700 dark:text-gray-200">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+                                <div><strong>限制條件變成平面：</strong> 每個不等式 $ax+by+cz \le d$ 都不再是線，而是一刀切過立體空間的「平面」。</div>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+                                <div><strong>可行解變成多面體：</strong> 所有的限制條件交集起來，會形成一個像寶石一樣的「多面體 (Polyhedron)」。</div>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+                                <div><strong>頂點法依然成立：</strong> 最神奇的是，極值依然會發生在這個立體寶石的「頂點」上！</div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- 2. 進階學習：單形法 -->
+                    <div class="card hover:-translate-y-1 hover:shadow-xl transition-all duration-300 border-t-4 border-t-purple-500">
+                        <div class="flex items-center mb-6">
+                            <div class="bg-purple-100 text-purple-600 p-3 rounded-xl mr-4 shadow-inner">
+                                <i class="fas fa-project-diagram text-2xl"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-800 dark:text-gray-100">電腦如何解題？單形法 (Simplex Method)</h3>
+                        </div>
+                        <p class="mb-4 text-lg leading-relaxed text-gray-600 dark:text-gray-300">
+                            在真實的商業應用（如航空公司的航班調度），變數可能高達數萬個！人類無法畫出幾萬維的圖形來找頂點，那電腦是怎麼解的？
+                        </p>
+                        <div class="flex flex-col md:flex-row gap-6 items-center bg-purple-50 dark:bg-purple-900/20 p-6 rounded-xl border border-purple-100 dark:border-purple-800/50">
+                            <div class="flex-1">
+                                <h4 class="font-bold text-lg mb-2 text-purple-800 dark:text-purple-300">George Dantzig 的偉大發明</h4>
+                                <p class="mb-3 text-gray-700 dark:text-gray-300">1947 年，美國數學家丹齊格發明了「單形法」。它的演算法邏輯非常直觀：</p>
+                                <ol class="list-decimal pl-5 space-y-2 text-gray-700 dark:text-gray-300 font-medium">
+                                    <li>隨便找到多面體上的一個「頂點」作為起點。</li>
+                                    <li>觀察相鄰的邊，沿著能讓目標函數「增加最快」的邊走，移動到下一個頂點。</li>
+                                    <li>重複這個過程，直到周圍沒有任何相鄰頂點能讓結果更好為止。此時的頂點即為全局最佳解！</li>
+                                </ol>
+                            </div>
+                            <div class="w-full md:w-1/3 flex justify-center">
+                                <div class="w-32 h-32 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center shadow-lg border-4 border-purple-200 dark:border-purple-700">
+                                    <i class="fas fa-microchip text-5xl text-purple-500"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. 進階學習：對偶理論 -->
+                    <div class="card hover:-translate-y-1 hover:shadow-xl transition-all duration-300 border-t-4 border-t-orange-500">
+                        <div class="flex items-center mb-6">
+                            <div class="bg-orange-100 text-orange-600 p-3 rounded-xl mr-4 shadow-inner">
+                                <i class="fas fa-yin-yang text-2xl"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-800 dark:text-gray-100">一體兩面：對偶理論 (Duality)</h3>
+                        </div>
+                        <p class="mb-4 text-lg leading-relaxed text-gray-600 dark:text-gray-300">
+                            數學家發現了一個驚人的事實：<strong>每一個「求最大利潤」的線性規劃問題，背後都隱藏著一個「求最小成本」的鏡像問題！</strong>
+                        </p>
+                        <div class="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-xl mb-4 text-center">
+                            <div class="flex flex-col md:flex-row justify-center items-center gap-4">
+                                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 flex-1 w-full">
+                                    <span class="text-orange-500 font-bold block mb-2 text-xl">主問題 (Primal)</span>
+                                    <span class="text-gray-600 dark:text-gray-300 block">在資源有限下，<br>如何分配生產以達到<strong>最大利潤</strong>？</span>
+                                </div>
+                                <div class="text-gray-400">
+                                    <i class="fas fa-exchange-alt text-3xl md:rotate-0 rotate-90"></i>
+                                </div>
+                                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 flex-1 w-full">
+                                    <span class="text-teal-500 font-bold block mb-2 text-xl">對偶問題 (Dual)</span>
+                                    <span class="text-gray-600 dark:text-gray-300 block">如果競爭對手想買下所有資源，<br>他應如何定價才能使收購<strong>成本最小</strong>？</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-center font-bold text-xl text-gray-800 dark:text-gray-200">
+                            強對偶定理 (Strong Duality Theorem): <br>
+                            <span class="text-orange-600 dark:text-orange-400">主問題的最大利潤</span> 永遠精準等於 <span class="text-teal-600 dark:text-teal-400">對偶問題的最小成本</span>！
+                        </p>
+                    </div>
+
+                    <!-- 4. 延伸學習：整數規劃 -->
+                    <div class="card hover:-translate-y-1 hover:shadow-xl transition-all duration-300 border-t-4 border-t-red-500">
+                        <div class="flex items-center mb-6">
+                            <div class="bg-red-100 text-red-600 p-3 rounded-xl mr-4 shadow-inner">
+                                <i class="fas fa-th-large text-2xl"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-800 dark:text-gray-100">當小數不被允許：整數規劃 (Integer Programming)</h3>
+                        </div>
+                        <p class="mb-4 text-lg leading-relaxed text-gray-600 dark:text-gray-300">
+                            在線性規劃中，我們算出來的最佳解常常是小數（例如：生產 3.7 台車）。但在現實中，我們無法生產「半台車」，這時我們就必須加上「變數必須為整數」的條件，這稱為<strong>整數規劃</strong>。
+                        </p>
+                        <div class="bg-red-50 dark:bg-red-900/20 p-5 rounded-xl border border-red-200 dark:border-red-800">
+                            <h4 class="font-bold text-red-800 dark:text-red-300 mb-2"><i class="fas fa-exclamation-triangle mr-2"></i>直覺的陷阱：四捨五入通常是錯的！</h4>
+                            <p class="text-gray-700 dark:text-gray-300 mb-2">許多人以為算出來是 3.7，只要四捨五入變成 4 就可以了。但實際上，(4, 2) 可能根本不在可行解區域內！</p>
+                            <p class="text-gray-700 dark:text-gray-300">加入整數條件會讓問題的難度暴增（在資訊科學中這屬於 <strong>NP-hard</strong> 難題），著名的「背包問題 (Knapsack Problem)」與「旅行推銷員問題 (TSP)」都屬於此類。</p>
+                        </div>
+                    </div>
+
+                    <!-- 5. 延伸學習：敏感度分析 -->
+                    <div class="card hover:-translate-y-1 hover:shadow-xl transition-all duration-300 border-t-4 border-t-green-500">
+                        <div class="flex items-center mb-6">
+                            <div class="bg-green-100 text-green-600 p-3 rounded-xl mr-4 shadow-inner">
+                                <i class="fas fa-chart-line text-2xl"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-800 dark:text-gray-100">牽一髮動全身：敏感度分析 (Sensitivity Analysis)</h3>
+                        </div>
+                        <p class="mb-4 text-lg leading-relaxed text-gray-600 dark:text-gray-300">
+                            找出最佳解後，老闆通常會問下一個問題：「如果我再多給你 1 公斤的紅色礦砂，我們的利潤可以增加多少？」這就是<strong>敏感度分析</strong>在研究的事。
+                        </p>
+                        <ul class="space-y-3 mb-6 bg-gray-50 dark:bg-gray-700/50 p-6 rounded-xl text-gray-700 dark:text-gray-200">
+                            <li class="flex items-start">
+                                <i class="fas fa-search-dollar text-green-500 mt-1 mr-3"></i>
+                                <div>
+                                    <strong>影子價格 (Shadow Price)：</strong><br>
+                                    多增加 1 單位的某資源，能讓目標函數（如利潤）增加多少。如果影子價格是 10 元，代表你最多只能花 10 元去買這 1 單位的額外資源，否則就會虧本！
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-arrows-alt-h text-green-500 mt-1 mr-3"></i>
+                                <div>
+                                    <strong>容許變動範圍：</strong><br>
+                                    市場價格天天在變。如果 A 合金的利潤從 50 元跌到 45 元，我們原本算出來的最佳生產計畫還適用嗎？敏感度分析可以告訴我們，只要價格落在某個區間內，最佳解的「頂點位置」就不會改變。
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                </div>
+
+            </div>
+        </main>
+
+        <!-- Settings Modal -->
+        <div v-if="showSettings" class="modal-overlay" @click.self="showSettings = false">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-11/12 max-w-lg max-h-[90vh] overflow-y-auto transform transition-all animate-fade-in border border-gray-200 dark:border-gray-700">
+                <div class="flex justify-between items-center mb-6 border-b border-gray-200 dark:border-gray-700 pb-3">
+                    <h2 class="text-2xl font-bold flex items-center"><i class="fas fa-cogs mr-3 text-blue-500"></i>顯示與操作設定</h2>
+                    <button @click="showSettings = false" class="text-gray-400 hover:text-red-500 text-3xl focus:outline-none transition bg-gray-100 hover:bg-red-100 rounded-full w-10 h-10 flex items-center justify-center dark:bg-gray-700 dark:hover:bg-red-900">&times;</button>
+                </div>
+                
+                <div class="space-y-5">
+                    <!-- 1. Fullscreen -->
+                    <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
+                        <span class="font-medium text-lg"><i class="fas fa-expand mr-3 w-5 text-gray-500"></i>全螢幕模式</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" v-model="settings.fullscreen" @change="toggleFullscreen" class="sr-only peer">
+                            <div class="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-500"></div>
+                        </label>
+                    </div>
+
+                    <!-- 2. Sound -->
+                    <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
+                        <span class="font-medium text-lg"><i class="fas fa-volume-up mr-3 w-5 text-gray-500"></i>音效回饋</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" v-model="settings.sound" @change="playSound('click')" class="sr-only peer">
+                            <div class="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-500"></div>
+                        </label>
+                    </div>
+
+                    <!-- 3. Device -->
+                    <div class="py-2 border-b border-gray-100 dark:border-gray-700">
+                        <span class="font-medium block mb-3 text-lg"><i class="fas fa-mobile-alt mr-3 w-5 text-gray-500"></i>響應式裝置模擬</span>
+                        <div class="flex flex-wrap gap-2">
+                            <button v-for="dev in ['auto', 'phone', 'tablet', 'desktop']" :key="dev"
+                                    @click="settings.device = dev; playSound('click')"
+                                    :class="['px-4 py-2 rounded-lg font-medium transition shadow-sm', settings.device === dev ? 'bg-blue-500 text-white shadow-inner' : 'bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200']">
+                                <i v-if="dev==='phone'" class="fas fa-mobile-alt mr-1"></i>
+                                <i v-else-if="dev==='tablet'" class="fas fa-tablet-alt mr-1"></i>
+                                <i v-else-if="dev==='desktop'" class="fas fa-desktop mr-1"></i>
+                                <i v-else class="fas fa-expand-arrows-alt mr-1"></i>
+                                {{ dev === 'auto' ? '自動' : dev === 'phone' ? '手機' : dev === 'tablet' ? '平板' : '電腦' }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 4. Layout -->
+                    <div class="py-2 border-b border-gray-100 dark:border-gray-700">
+                        <span class="font-medium block mb-3 text-lg"><i class="fas fa-columns mr-3 w-5 text-gray-500"></i>版面排列</span>
+                        <div class="flex flex-wrap gap-2">
+                            <button v-for="l in ['auto', 'portrait', 'landscape']" :key="l"
+                                    @click="settings.layout = l; playSound('click')"
+                                    :class="['px-4 py-2 rounded-lg font-medium transition shadow-sm', settings.layout === l ? 'bg-blue-500 text-white shadow-inner' : 'bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200']">
+                                {{ l === 'auto' ? '自動排列' : l === 'portrait' ? '強制直式' : '強制橫式' }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 5. Language -->
+                    <div class="py-2 border-b border-gray-100 dark:border-gray-700">
+                        <span class="font-medium block mb-3 text-lg"><i class="fas fa-language mr-3 w-5 text-gray-500"></i>顯示語言 (Language)</span>
+                        <div class="flex flex-wrap gap-2">
+                            <button @click="settings.language = 'zh'; playSound('click')" :class="['px-4 py-2 rounded-lg font-medium transition shadow-sm', settings.language === 'zh' ? 'bg-blue-500 text-white shadow-inner' : 'bg-gray-100 hover:bg-gray-200 text-gray-700']">繁體中文</button>
+                            <button @click="settings.language = 'en'; playSound('click')" :class="['px-4 py-2 rounded-lg font-medium transition shadow-sm', settings.language === 'en' ? 'bg-blue-500 text-white shadow-inner' : 'bg-gray-100 hover:bg-gray-200 text-gray-700']">English</button>
+                        </div>
+                    </div>
+
+                    <!-- 6. Font Size -->
+                    <div class="py-2 border-b border-gray-100 dark:border-gray-700">
+                        <span class="font-medium block mb-3 text-lg"><i class="fas fa-font mr-3 w-5 text-gray-500"></i>字體大小調整</span>
+                        <div class="flex flex-wrap gap-2">
+                            <button @click="settings.fontSize = 'small'; playSound('click')" :class="['px-4 py-2 rounded-lg transition shadow-sm text-sm', settings.fontSize === 'small' ? 'bg-blue-500 text-white font-bold' : 'bg-gray-100 hover:bg-gray-200 text-gray-700']">縮小字體</button>
+                            <button @click="settings.fontSize = 'standard'; playSound('click')" :class="['px-4 py-2 rounded-lg transition shadow-sm text-base', settings.fontSize === 'standard' ? 'bg-blue-500 text-white font-bold' : 'bg-gray-100 hover:bg-gray-200 text-gray-700']">標準大小</button>
+                            <button @click="settings.fontSize = 'large'; playSound('click')" :class="['px-4 py-2 rounded-lg transition shadow-sm text-lg', settings.fontSize === 'large' ? 'bg-blue-500 text-white font-bold' : 'bg-gray-100 hover:bg-gray-200 text-gray-700']">放大字體</button>
+                        </div>
+                    </div>
+
+                    <!-- 7. Theme -->
+                    <div class="py-2">
+                        <span class="font-medium block mb-3 text-lg"><i class="fas fa-palette mr-3 w-5 text-gray-500"></i>介面色系</span>
+                        <div class="flex flex-wrap gap-2">
+                            <button @click="setTheme('system'); playSound('click')" :class="['px-4 py-2 rounded-lg font-medium transition shadow-sm flex items-center', settings.theme === 'system' ? 'bg-blue-500 text-white shadow-inner' : 'bg-gray-100 hover:bg-gray-200 text-gray-700']"><i class="fas fa-laptop mr-2"></i>跟隨系統</button>
+                            <button @click="setTheme('light'); playSound('click')" :class="['px-4 py-2 rounded-lg font-medium transition shadow-sm flex items-center', settings.theme === 'light' ? 'bg-yellow-500 text-white shadow-inner' : 'bg-gray-100 hover:bg-gray-200 text-gray-700']"><i class="fas fa-sun mr-2"></i>亮色模式</button>
+                            <button @click="setTheme('dark'); playSound('click')" :class="['px-4 py-2 rounded-lg font-medium transition shadow-sm flex items-center', settings.theme === 'dark' ? 'bg-indigo-600 text-white shadow-inner' : 'bg-gray-100 hover:bg-gray-200 text-gray-700']"><i class="fas fa-moon mr-2"></i>暗色模式</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Logic -->
+    <script src="js/app.js"></script>
+</body>
+</html>
